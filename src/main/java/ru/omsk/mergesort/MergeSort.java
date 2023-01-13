@@ -1,11 +1,7 @@
 package ru.omsk.mergesort;
 
-import lombok.Getter;
-import lombok.Setter;
 import ru.omsk.mergesort.exception.FileReadException;
 import ru.omsk.mergesort.exception.ParseFileException;
-import ru.omsk.mergesort.exception.ParseParamException;
-import ru.omsk.mergesort.flag.OrderFlag;
 import ru.omsk.mergesort.flag.TypeFlag;
 
 import java.io.BufferedReader;
@@ -15,21 +11,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.function.Predicate;
 
-import static ru.omsk.mergesort.flag.OrderFlag.ASC;
 import static ru.omsk.mergesort.flag.OrderFlag.DESC;
 
-@Getter
-@Setter
 public class MergeSort<T extends Comparable<T>> {
     private TreeMap<T, List<BufferedReader>> sortedMap;
     private final String fileDirectory = System.getenv("FILE_DIRECTORY");
@@ -47,7 +36,7 @@ public class MergeSort<T extends Comparable<T>> {
     public void sort() {
         try {
             BufferedWriter bufferedWriter = new BufferedWriter(
-                    new FileWriter(String.join("/", fileDirectory, outputFileName), false)
+                    new FileWriter(String.join(File.pathSeparator, fileDirectory, outputFileName), false)
             );
 
             while (!sortedMap.isEmpty()) {
@@ -56,6 +45,7 @@ public class MergeSort<T extends Comparable<T>> {
                 for (BufferedReader reader: entry.getValue()) {
                     if (lastValue != null && getComparator().compare(lastValue, entry.getKey()) > 0) {
                         readNext(reader);
+                        System.out.println("Неверный порядок в исходном файле, значение будет проигнорировано");
                         continue;
                     }
 
@@ -72,16 +62,6 @@ public class MergeSort<T extends Comparable<T>> {
         }
     }
 
-    private void readNext(BufferedReader reader) {
-        try {
-            readLineByBufferedReader(reader);
-        } catch (ParseFileException e) {
-            System.out.println(
-                    String.join(" ", e.getMessage(), "Значение будет проигнорировано")
-            );
-        }
-    }
-
     private void initMap() throws FileReadException {
         Comparator<T> comparator = getComparator();
         sortedMap = new TreeMap<>(comparator);
@@ -91,38 +71,32 @@ public class MergeSort<T extends Comparable<T>> {
                 BufferedReader bufferedReader = new BufferedReader(
                         new FileReader(String.join("/", fileDirectory, inputFile))
                 );
-                readLineByBufferedReader(bufferedReader);
+                readNext(bufferedReader);
             } catch (FileNotFoundException exception) {
                 throw new FileReadException(String.format(
                         "Файл '%s' не найден. работа будет остановлена!",
                         String.join("/", fileDirectory, inputFile))
                 );
-            } catch (ParseFileException e) {
-                System.out.println(e.getMessage());
-                System.out.printf("Файл '%s' имеет неверный формат данных и будет проигнорирован%n", inputFile);
             }
         }
     }
 
-    private Comparator<T> getComparator() {
-        return (o1, o2) -> {
-            if (DESC.equals(Parameters.ORDER)) {
-                return o2.compareTo(o1);
-            }
-            return o1.compareTo(o2);
-        };
-    }
-
-    private void readLineByBufferedReader(BufferedReader bufferedReader) throws ParseFileException {
+    private void readNext(BufferedReader bufferedReader) {
         try {
             String line = bufferedReader.readLine();
             if (line != null) {
-                T keyMap = lineToValue(line);
-                if (sortedMap.containsKey(keyMap)) {
-                    List<BufferedReader> bufferedReadersElems = sortedMap.get(keyMap);
-                    bufferedReadersElems.add(bufferedReader);
-                } else {
-                    sortedMap.put(keyMap, new ArrayList<>(Collections.singletonList(bufferedReader)));
+                try {
+                    T keyMap = lineToValue(line);
+                    if (sortedMap.containsKey(keyMap)) {
+                        List<BufferedReader> bufferedReadersElems = sortedMap.get(keyMap);
+                        bufferedReadersElems.add(bufferedReader);
+                    } else {
+                        sortedMap.put(keyMap, new ArrayList<>(Collections.singletonList(bufferedReader)));
+                    }
+                } catch (ParseFileException exception) {
+                    System.out.println(exception.getMessage());
+                    System.out.println("Не удалось распознать строку в файле. Она будет проигнорирована");
+                    readNext(bufferedReader);
                 }
             }
         } catch (IOException exception) {
@@ -140,8 +114,23 @@ public class MergeSort<T extends Comparable<T>> {
                 );
             }
         }
-        return (T) line.trim();
+        if (line.contains(" ")) {
+            throw new ParseFileException(
+                    String.format(
+                            "Неверный формат данных в файле, в строке обнаружены пробельные символы. Считано: '%s'",
+                            line
+                    )
+            );
+        }
+        return (T) line;
     }
 
-
+    private Comparator<T> getComparator() {
+        return (o1, o2) -> {
+            if (DESC.equals(Parameters.ORDER)) {
+                return o2.compareTo(o1);
+            }
+            return o1.compareTo(o2);
+        };
+    }
 }

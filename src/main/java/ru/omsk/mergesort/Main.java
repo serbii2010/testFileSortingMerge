@@ -1,12 +1,10 @@
 package ru.omsk.mergesort;
 
-import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Iterator;
-
 import ru.omsk.mergesort.exception.FileReadException;
 import ru.omsk.mergesort.exception.ParseParamException;
-import ru.omsk.mergesort.flag.TypeFlag;
+
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class Main {
     public static void main(String[] args) {
@@ -15,7 +13,9 @@ public class Main {
             Parameters.parse(iterator);
             Parameters.printParams();
 
+            System.out.println("Инициализация входных файлов...");
             MergeSort mergeSort = new MergeSort();
+            System.out.println("Инициализация входных файлов завершена!");
             System.out.println("Запускаю сортировку...");
             mergeSort.sort();
             System.out.println("Сортировка успешно завершена!");
