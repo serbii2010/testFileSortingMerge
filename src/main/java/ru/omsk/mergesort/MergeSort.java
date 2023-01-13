@@ -9,9 +9,11 @@ import ru.omsk.mergesort.flag.OrderFlag;
 import ru.omsk.mergesort.flag.TypeFlag;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -34,15 +36,50 @@ public class MergeSort<T extends Comparable<T>> {
 
     private final List<String> inputFileNames;
     private final String outputFileName;
-
+    private T lastValue;
     public MergeSort() throws FileReadException {
         this.inputFileNames = new ArrayList<>(Parameters.INPUT_LINE_NAMES);
         this.outputFileName = Parameters.OUTPUT_FILE_NAME;
+        this.lastValue = null;
         initMap();
     }
 
     public void sort() {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(
+                    new FileWriter(String.join("/", fileDirectory, outputFileName), false)
+            );
 
+            while (!sortedMap.isEmpty()) {
+                var entry = sortedMap.firstEntry();
+                sortedMap.remove(entry.getKey());
+                for (BufferedReader reader: entry.getValue()) {
+                    if (lastValue != null && getComparator().compare(lastValue, entry.getKey()) > 0) {
+                        readNext(reader);
+                        continue;
+                    }
+
+                    bufferedWriter.write(entry.getKey().toString());
+                    bufferedWriter.newLine();
+                    bufferedWriter.flush();
+                    readNext(reader);
+                    lastValue = entry.getKey();
+                }
+
+            }
+        } catch (IOException exception) {
+            System.out.println(exception.getMessage());
+        }
+    }
+
+    private void readNext(BufferedReader reader) {
+        try {
+            readLineByBufferedReader(reader);
+        } catch (ParseFileException e) {
+            System.out.println(
+                    String.join(" ", e.getMessage(), "Значение будет проигнорировано")
+            );
+        }
     }
 
     private void initMap() throws FileReadException {
@@ -54,27 +91,15 @@ public class MergeSort<T extends Comparable<T>> {
                 BufferedReader bufferedReader = new BufferedReader(
                         new FileReader(String.join("/", fileDirectory, inputFile))
                 );
-
-                String line = bufferedReader.readLine();
-                if (line != null) {
-                    T keyMap = lineToValue(line);
-                    if (sortedMap.containsKey(keyMap)) {
-                        List<BufferedReader> bufferedReadersElems = sortedMap.get(keyMap);
-                        bufferedReadersElems.add(bufferedReader);
-                    } else {
-                        sortedMap.put(keyMap, new ArrayList<>(Collections.singletonList(bufferedReader)));
-                    }
-                }
+                readLineByBufferedReader(bufferedReader);
             } catch (FileNotFoundException exception) {
                 throw new FileReadException(String.format(
                         "Файл '%s' не найден. работа будет остановлена!",
                         String.join("/", fileDirectory, inputFile))
                 );
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             } catch (ParseFileException e) {
                 System.out.println(e.getMessage());
-                System.out.println("Файл '%s' имеет неверный формат данных и будет проигнорирован");
+                System.out.printf("Файл '%s' имеет неверный формат данных и будет проигнорирован%n", inputFile);
             }
         }
     }
@@ -86,6 +111,23 @@ public class MergeSort<T extends Comparable<T>> {
             }
             return o1.compareTo(o2);
         };
+    }
+
+    private void readLineByBufferedReader(BufferedReader bufferedReader) throws ParseFileException {
+        try {
+            String line = bufferedReader.readLine();
+            if (line != null) {
+                T keyMap = lineToValue(line);
+                if (sortedMap.containsKey(keyMap)) {
+                    List<BufferedReader> bufferedReadersElems = sortedMap.get(keyMap);
+                    bufferedReadersElems.add(bufferedReader);
+                } else {
+                    sortedMap.put(keyMap, new ArrayList<>(Collections.singletonList(bufferedReader)));
+                }
+            }
+        } catch (IOException exception) {
+            System.out.print("Не удалось прочитать строку, чтение текущего файла будет остановлено!");
+        }
     }
 
     private T lineToValue(String line) throws ParseFileException {

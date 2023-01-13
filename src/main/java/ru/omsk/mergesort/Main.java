@@ -10,19 +10,15 @@ import ru.omsk.mergesort.flag.TypeFlag;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Start sorting...");
-
         try {
             Iterator<String> iterator = Arrays.stream(args).iterator();
             Parameters.parse(iterator);
             Parameters.printParams();
 
-            Type type;
             MergeSort mergeSort = new MergeSort();
+            System.out.println("Запускаю сортировку...");
             mergeSort.sort();
-
-            System.out.println("End sorting");
-
+            System.out.println("Сортировка успешно завершена!");
         }
         catch (ParseParamException exception) {
             System.out.println(exception.getMessage());
@@ -33,6 +29,4 @@ public class Main {
             System.out.println("Проверьте названия входящих файлов");
         }
     }
-
-
 }
