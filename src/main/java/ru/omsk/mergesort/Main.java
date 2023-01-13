@@ -2,6 +2,8 @@ package ru.omsk.mergesort;
 
 import ru.omsk.mergesort.exception.FileReadException;
 import ru.omsk.mergesort.exception.ParseParamException;
+import ru.omsk.mergesort.main.MergeSort;
+import ru.omsk.mergesort.main.Parameters;
 
 import java.util.Arrays;
 import java.util.Iterator;

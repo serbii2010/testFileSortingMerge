@@ -1,4 +1,4 @@
-package ru.omsk.mergesort;
+package ru.omsk.mergesort.main;
 
 import ru.omsk.mergesort.exception.ParseParamException;
 import ru.omsk.mergesort.flag.OrderFlag;
