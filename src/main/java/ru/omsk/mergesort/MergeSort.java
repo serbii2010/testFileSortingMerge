@@ -36,7 +36,7 @@ public class MergeSort<T extends Comparable<T>> {
     public void sort() {
         try {
             BufferedWriter bufferedWriter = new BufferedWriter(
-                    new FileWriter(String.join(File.pathSeparator, fileDirectory, outputFileName), false)
+                    new FileWriter(String.join(File.separator, fileDirectory, outputFileName), false)
             );
 
             while (!sortedMap.isEmpty()) {
@@ -55,8 +55,8 @@ public class MergeSort<T extends Comparable<T>> {
                     readNext(reader);
                     lastValue = entry.getKey();
                 }
-
             }
+            bufferedWriter.close();
         } catch (IOException exception) {
             System.out.println(exception.getMessage());
         }
