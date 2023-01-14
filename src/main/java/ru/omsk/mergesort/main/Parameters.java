@@ -14,6 +14,8 @@ public class Parameters {
     public static String OUTPUT_FILE_NAME = null;
     public static List<String> INPUT_LINE_NAMES = null;
 
+    public static final String WORK_DIRECTORY = System.getenv("WORK_DIRECTORY") != null?System.getenv("WORK_DIRECTORY"):System.getProperty("user.dir");
+
     public static void parse(Iterator<String> iterator) throws ParseParamException {
         parseFlags(iterator);
         parseOutputFile(iterator);
@@ -22,6 +24,7 @@ public class Parameters {
 
     public static void printParams() {
         System.out.println("Прочитаны входные параметры:");
+        System.out.printf("\tРабочая директория: %s%n", WORK_DIRECTORY != null? WORK_DIRECTORY: "Не указана");
         System.out.printf("\tПорядок сортироки: %s%n", ORDER.getOrder());
         System.out.printf("\tТип данных: %s%n", TYPE.getType());
         System.out.printf("\tИмя выходного файла: %s%n", OUTPUT_FILE_NAME);

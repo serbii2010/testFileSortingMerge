@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.TreeMap;
 
 import static ru.omsk.mergesort.flag.OrderFlag.DESC;
+import static ru.omsk.mergesort.main.Parameters.WORK_DIRECTORY;
 
 public class MergeSort<T extends Comparable<T>> {
     private TreeMap<T, List<BufferedReader>> sortedMap;
-    private final String fileDirectory = System.getenv("FILE_DIRECTORY");
 
     private final List<String> inputFileNames;
     private final String outputFileName;
@@ -34,11 +34,9 @@ public class MergeSort<T extends Comparable<T>> {
     }
 
     public void sort() {
-        try {
-            BufferedWriter bufferedWriter = new BufferedWriter(
-                    new FileWriter(String.join(File.separator, fileDirectory, outputFileName), false)
-            );
-
+        try (BufferedWriter bufferedWriter = new BufferedWriter(
+                new FileWriter(String.join(File.separator, WORK_DIRECTORY, outputFileName), false)
+        )){
             while (!sortedMap.isEmpty()) {
                 var entry = sortedMap.firstEntry();
                 sortedMap.remove(entry.getKey());
@@ -49,16 +47,15 @@ public class MergeSort<T extends Comparable<T>> {
                         continue;
                     }
 
+                    assert entry.getKey() != null;
                     bufferedWriter.write(entry.getKey().toString());
                     bufferedWriter.newLine();
-                    bufferedWriter.flush();
                     readNext(reader);
                     lastValue = entry.getKey();
                 }
             }
-            bufferedWriter.close();
         } catch (IOException exception) {
-            System.out.println(exception.getMessage());
+            System.out.println("Не удалось записать данные в выходной файл. Работа будет остановлена");
         }
     }
 
@@ -69,13 +66,13 @@ public class MergeSort<T extends Comparable<T>> {
         for (String inputFile : this.inputFileNames) {
             try {
                 BufferedReader bufferedReader = new BufferedReader(
-                        new FileReader(String.join("/", fileDirectory, inputFile))
+                        new FileReader(String.join("/", WORK_DIRECTORY, inputFile))
                 );
                 readNext(bufferedReader);
             } catch (FileNotFoundException exception) {
                 throw new FileReadException(String.format(
                         "Файл '%s' не найден. работа будет остановлена!",
-                        String.join("/", fileDirectory, inputFile))
+                        String.join("/", WORK_DIRECTORY, inputFile))
                 );
             }
         }
